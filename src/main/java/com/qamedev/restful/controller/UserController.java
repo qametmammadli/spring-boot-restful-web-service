@@ -5,6 +5,7 @@ import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.ui.request.UserDetailsRequest;
 import com.qamedev.restful.ui.response.UserResponse;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,9 +24,10 @@ public class UserController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@RequestBody UserDetailsRequest userDetails){
         UserResponse response = new UserResponse();
-
+        // todo mapStruct
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(userDetails, userDto);
 
@@ -43,13 +45,21 @@ public class UserController {
         return response;
     }
 
-    @PutMapping
-    public String updateUser(){
-        return "Update user";
+    @PutMapping("{id}")
+    public UserResponse updateUser(@PathVariable String id, @RequestBody UserDetailsRequest userDetails){
+        UserResponse response = new UserResponse();
+        // todo mapStruct
+        UserDto userDto = new UserDto();
+        BeanUtils.copyProperties(userDetails, userDto);
+
+        UserDto updatedUser = userService.updateUser(id, userDto);
+        BeanUtils.copyProperties(updatedUser, response);
+        return response;
     }
 
-    @DeleteMapping
-    public String deleteUser(){
-        return "Delete user";
+    @DeleteMapping("{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String id){
+        userService.deleteUser(id);
     }
 }

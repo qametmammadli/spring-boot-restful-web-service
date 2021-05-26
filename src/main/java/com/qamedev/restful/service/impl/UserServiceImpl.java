@@ -6,12 +6,14 @@ import com.qamedev.restful.repository.UserRepository;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.util.CommonUtil;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -39,7 +41,8 @@ public class UserServiceImpl implements UserService {
         userEntity.setUserId(CommonUtil.generateUserId(35));
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
 
-        userRepository.save(userEntity);
+        userEntity = userRepository.save(userEntity);
+        BeanUtils.copyProperties(userEntity, userDto);
         return userDto;
     }
 
@@ -74,5 +77,31 @@ public class UserServiceImpl implements UserService {
 
         BeanUtils.copyProperties(optionalUserEntity.get(), userDto);
         return userDto;
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUser(String id, UserDto userDto) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
+        if(optionalUserEntity.isEmpty())
+            throw new UsernameNotFoundException("User not found");
+
+        UserEntity userEntity = optionalUserEntity.get();
+        userEntity.setFirstName(userDto.getFirstName());
+        userEntity.setSurName(userDto.getSurName());
+        userEntity = userRepository.save(userEntity);
+        BeanUtils.copyProperties(userEntity, userDto);
+        return userDto;
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String id) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
+        if(optionalUserEntity.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s not found", id));
+        }
+        userRepository.delete(optionalUserEntity.get());
+
     }
 }
