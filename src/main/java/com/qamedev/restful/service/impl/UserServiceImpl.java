@@ -6,6 +6,8 @@ import com.qamedev.restful.repository.UserRepository;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.util.CommonUtil;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -102,6 +104,16 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s not found", id));
         }
         userRepository.delete(optionalUserEntity.get());
+    }
 
+    @Override
+    public Page<UserDto> getUsers(PageRequest pageRequest) {
+        Page<UserEntity> userEntityPage = userRepository.findAll(pageRequest);
+
+        return userEntityPage.map(userEntity -> {
+            UserDto userDto = new UserDto();
+            BeanUtils.copyProperties(userEntity, userDto);
+            return userDto;
+        });
     }
 }

@@ -5,6 +5,9 @@ import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.ui.request.UserDetailsRequest;
 import com.qamedev.restful.ui.response.UserResponse;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,8 +22,19 @@ public class UserController {
     }
 
     @GetMapping
-    public String getUsers(){
-        return "get all users";
+    public Page<UserResponse> getUsers(@RequestParam(name = "page", required = false, defaultValue = "0") int page,
+                                       @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
+                                       @RequestParam(name = "sortDirection", required = false, defaultValue = "asc") String sortDirection,
+                                       @RequestParam(name = "sortColumn", required = false, defaultValue = "id") String sortColumn){
+
+        PageRequest pageRequest = PageRequest.of(page, limit, Sort.Direction.fromString(sortDirection), sortColumn);
+        Page<UserDto> userDtoPage = userService.getUsers(pageRequest);
+
+        return userDtoPage.map(userDto -> {
+            UserResponse response = new UserResponse();
+            BeanUtils.copyProperties(userDto, response);
+            return response;
+        });
     }
 
     @PostMapping
