@@ -2,20 +2,20 @@ package com.qamedev.restful.service.impl;
 
 import com.qamedev.restful.dto.UserDto;
 import com.qamedev.restful.entity.UserEntity;
+import com.qamedev.restful.exception.ErrorMessages;
+import com.qamedev.restful.exception.UserServiceException;
 import com.qamedev.restful.repository.UserRepository;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.util.CommonUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto createUser(UserDto userDto) {
         if(userRepository.findByEmail(userDto.getEmail()).isPresent())
-            throw new RuntimeException("This user already exists");
+            throw new UserServiceException(ErrorMessages.REGISTERED_EMAIL.getErrorMessage());
 
         UserEntity userEntity = new UserEntity();
         BeanUtils.copyProperties(userDto, userEntity);
@@ -75,8 +75,8 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = new UserDto();
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
         if(optionalUserEntity.isEmpty())
-            throw new UsernameNotFoundException("User not found");
-
+//            throw new UsernameNotFoundException("User not found");
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
         BeanUtils.copyProperties(optionalUserEntity.get(), userDto);
         return userDto;
     }
@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(String id, UserDto userDto) {
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
         if(optionalUserEntity.isEmpty())
-            throw new UsernameNotFoundException("User not found");
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.name());
 
         UserEntity userEntity = optionalUserEntity.get();
         userEntity.setFirstName(userDto.getFirstName());
@@ -101,7 +101,8 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String id) {
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
         if(optionalUserEntity.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s not found", id));
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s not found", id));
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.name());
         }
         userRepository.delete(optionalUserEntity.get());
     }
