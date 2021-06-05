@@ -3,6 +3,8 @@ package com.qamedev.restful.ui.request;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.List;
+
 @Data
 @Getter
 public class UserDetailsRequest {
@@ -10,4 +12,5 @@ public class UserDetailsRequest {
     private String surName;
     private String email;
     private String password;
+    private List<AddressRequest> addresses;
 }

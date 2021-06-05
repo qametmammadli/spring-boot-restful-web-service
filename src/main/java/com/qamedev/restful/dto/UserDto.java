@@ -3,6 +3,7 @@ package com.qamedev.restful.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class UserDto implements Serializable {
@@ -16,4 +17,5 @@ public class UserDto implements Serializable {
     private String encryptedPassword;
     private String emailVerificationToken;
     private Boolean emailVerificationStatus = false;
+    private List<AddressDto> addresses;
 }
