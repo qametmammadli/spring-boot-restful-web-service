@@ -1,13 +1,14 @@
 package com.qamedev.restful.service.impl;
 
 import com.qamedev.restful.dto.UserDto;
+import com.qamedev.restful.entity.AddressEntity;
 import com.qamedev.restful.entity.UserEntity;
 import com.qamedev.restful.exception.ErrorMessages;
 import com.qamedev.restful.exception.UserServiceException;
+import com.qamedev.restful.mapper.UserMapper;
 import com.qamedev.restful.repository.UserRepository;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.util.CommonUtil;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.User;
@@ -38,14 +39,17 @@ public class UserServiceImpl implements UserService {
         if(userRepository.findByEmail(userDto.getEmail()).isPresent())
             throw new UserServiceException(ErrorMessages.REGISTERED_EMAIL.getErrorMessage());
 
-        UserEntity userEntity = new UserEntity();
-        BeanUtils.copyProperties(userDto, userEntity);
-        userEntity.setUserId(CommonUtil.generateUserId(35));
+        UserEntity userEntity = UserMapper.INSTANCE.mapUserDtoToUserEntity(userDto);
+        userEntity.setUserId(CommonUtil.generateUserId());
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
 
+        for (AddressEntity addressEntity : userEntity.getAddresses()) {
+            addressEntity.setAddressId(CommonUtil.generateAddressId());
+            addressEntity.setUser(userEntity);
+        }
+
         userEntity = userRepository.save(userEntity);
-        BeanUtils.copyProperties(userEntity, userDto);
-        return userDto;
+        return UserMapper.INSTANCE.mapUserEntityToUserDto(userEntity);
     }
 
     @Override
@@ -65,20 +69,16 @@ public class UserServiceImpl implements UserService {
         if(optionalUserEntity.isEmpty())
             throw new UsernameNotFoundException("User with email " + email + " not found");
 
-        UserDto userDto = new UserDto();
-        BeanUtils.copyProperties(optionalUserEntity.get(), userDto);
-        return userDto;
+        return UserMapper.INSTANCE.mapUserEntityToUserDto(optionalUserEntity.get());
     }
 
     @Override
     public UserDto getUserByUserId(String id) {
-        UserDto userDto = new UserDto();
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
         if(optionalUserEntity.isEmpty())
 //            throw new UsernameNotFoundException("User not found");
             throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
-        BeanUtils.copyProperties(optionalUserEntity.get(), userDto);
-        return userDto;
+        return UserMapper.INSTANCE.mapUserEntityToUserDto(optionalUserEntity.get());
     }
 
     @Override
@@ -92,8 +92,8 @@ public class UserServiceImpl implements UserService {
         userEntity.setFirstName(userDto.getFirstName());
         userEntity.setSurName(userDto.getSurName());
         userEntity = userRepository.save(userEntity);
-        BeanUtils.copyProperties(userEntity, userDto);
-        return userDto;
+
+        return UserMapper.INSTANCE.mapUserEntityToUserDto(userEntity);
     }
 
     @Override
@@ -110,11 +110,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserDto> getUsers(PageRequest pageRequest) {
         Page<UserEntity> userEntityPage = userRepository.findAll(pageRequest);
-
-        return userEntityPage.map(userEntity -> {
-            UserDto userDto = new UserDto();
-            BeanUtils.copyProperties(userEntity, userDto);
-            return userDto;
-        });
+        return userEntityPage.map(UserMapper.INSTANCE::mapUserEntityToUserDto);
     }
 }
