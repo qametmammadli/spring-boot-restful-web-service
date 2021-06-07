@@ -1,7 +1,6 @@
 package com.qamedev.restful.entity;
 
 import lombok.Data;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
@@ -35,7 +34,8 @@ public class UserEntity implements Serializable {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private Boolean emailVerificationStatus;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AddressEntity> addresses;
 }
 

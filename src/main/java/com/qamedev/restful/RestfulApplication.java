@@ -1,5 +1,7 @@
 package com.qamedev.restful;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -21,11 +23,19 @@ public class RestfulApplication extends SpringBootServletInitializer {
 
 	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder(){
-		return new BCryptPasswordEncoder(15);
+		return new BCryptPasswordEncoder();
 	}
 
 	@Bean
 	public SpringApplicationContext getSpringApplicationContext(){
 		return new SpringApplicationContext();
+	}
+
+	@Bean
+	public ModelMapper modelMapper() {
+		ModelMapper modelMapper = new ModelMapper();
+		modelMapper.getConfiguration()
+				.setMatchingStrategy(MatchingStrategies.STRICT);
+		return modelMapper;
 	}
 }

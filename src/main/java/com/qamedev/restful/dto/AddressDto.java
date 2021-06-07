@@ -7,6 +7,7 @@ import java.io.Serializable;
 @Data
 public class AddressDto implements Serializable {
     private static final long serialVersionUID = -537681513028180998L;
+    private long id;
     private String addressId;
     private String country;
     private String city;

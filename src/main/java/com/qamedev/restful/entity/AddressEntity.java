@@ -11,10 +11,10 @@ public class AddressEntity implements Serializable {
     private static final long serialVersionUID = -871533680766204061L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "address_id", nullable = false)
+    @Column(nullable = false)
     private String addressId;
 
     @Column(length = 25, nullable = false)
@@ -40,7 +40,8 @@ public class AddressEntity implements Serializable {
     @Override
     public String toString() {
         return "AddressEntity{" +
-                "addressId='" + addressId + '\'' +
+                "id=" + id +
+                ", addressId='" + addressId + '\'' +
                 ", country='" + country + '\'' +
                 ", city='" + city + '\'' +
                 ", addressName='" + addressName + '\'' +
