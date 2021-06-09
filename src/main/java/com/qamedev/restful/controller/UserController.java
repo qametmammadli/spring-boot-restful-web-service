@@ -11,6 +11,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -35,7 +39,7 @@ public class UserController {
     public Page<UserResponse> getUsers(@RequestParam(name = "page", required = false, defaultValue = "0") int page,
                                        @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
                                        @RequestParam(name = "sortDirection", required = false, defaultValue = "asc") String sortDirection,
-                                       @RequestParam(name = "sortColumn", required = false, defaultValue = "id") String sortColumn){
+                                       @RequestParam(name = "sortColumn", required = false, defaultValue = "id") String sortColumn) {
 
         PageRequest pageRequest = PageRequest.of(page, limit, Sort.Direction.fromString(sortDirection), sortColumn);
         Page<UserDto> userDtoPage = userService.getUsers(pageRequest);
@@ -46,7 +50,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@RequestBody UserDetailsRequest userDetails){
+    public UserResponse createUser(@RequestBody UserDetailsRequest userDetails) {
 //        UserDto userDto = UserMapper.INSTANCE.mapUserRequestToUserDto(userDetails);
 
         UserDto userDto = mapper.map(userDetails, UserDto.class);
@@ -56,34 +60,53 @@ public class UserController {
         return mapper.map(userDto, UserResponse.class);
     }
 
-    @GetMapping(path = "{id}")
+    @GetMapping(path = "/{id}")
 //    @GetMapping(path = "{id}", produces = { MediaType.APPLICATION_XML_VALUE})
-    public UserResponse getUser(@PathVariable String id){
+    public UserResponse getUser(@PathVariable String id) {
         UserDto userDto = userService.getUserByUserId(id);
 //        return UserMapper.INSTANCE.mapUserDtoToUserResponse(userDto);
         return mapper.map(userDto, UserResponse.class);
     }
 
-    @GetMapping("{userId}/addresses")
-    public List<AddressResponse> getUserAddresses(@PathVariable String userId){
+    @GetMapping("/{userId}/addresses")
+    public CollectionModel<AddressResponse> getUserAddresses(@PathVariable String userId) {
         List<AddressDto> addressesDtoList = addressService.getAddressesByUserId(userId);
-//        return addressesDtoList.stream()
-//                .map(AddressMapper.INSTANCE::mapAddressDtoToAddressResponse)
-//                .collect(Collectors.toList());
-        return addressesDtoList.stream()
-                .map(addressDto -> mapper.map(addressDto, AddressResponse.class))
-                .collect(Collectors.toList());
+
+        List<AddressResponse> addressResponseList = addressesDtoList.stream()
+                .map(addressDto ->
+                    {
+                        AddressResponse addressResponse = mapper.map(addressDto, AddressResponse.class);
+                        Link addressLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
+                                .getUserAddress(userId, addressResponse.getAddressId())).withSelfRel();
+
+                        return addressResponse.add(addressLink);
+                    }
+                ).collect(Collectors.toList());
+
+        Link userLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).getUser(userId)).withRel("user");
+        Link selfLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).getUserAddresses(userId)).withSelfRel();
+
+        return CollectionModel.of(addressResponseList, userLink, selfLink);
     }
 
-    @GetMapping("{userId}/addresses/{addressId}")
-    public AddressResponse getUserAddress(@PathVariable String addressId, @PathVariable String userId){
+    @GetMapping("/{userId}/addresses/{addressId}")
+    public EntityModel<AddressResponse> getUserAddress(@PathVariable String userId, @PathVariable String addressId) {
         AddressDto addressDto = addressService.getAddress(userId, addressId);
-        return mapper.map(addressDto, AddressResponse.class);
 
+        Link userLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
+                .getUser(userId))
+                .withRel("user");
+
+        Link allUserAddressesLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
+                .getUserAddresses(userId))
+                .withRel("addresses");
+
+        AddressResponse addressResponse = mapper.map(addressDto, AddressResponse.class);
+        return EntityModel.of(addressResponse, userLink, allUserAddressesLink);
     }
 
-    @PutMapping("{id}")
-    public UserResponse updateUser(@PathVariable String id, @RequestBody UserDetailsRequest userDetails){
+    @PutMapping("/{id}")
+    public UserResponse updateUser(@PathVariable String id, @RequestBody UserDetailsRequest userDetails) {
 //        UserDto userDto = UserMapper.INSTANCE.mapUserRequestToUserDto(userDetails);
         UserDto userDto = mapper.map(userDetails, UserDto.class);
         userDto = userService.updateUser(id, userDto);
@@ -91,9 +114,9 @@ public class UserController {
         return mapper.map(userDto, UserResponse.class);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable String id){
+    public void deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
     }
 }
