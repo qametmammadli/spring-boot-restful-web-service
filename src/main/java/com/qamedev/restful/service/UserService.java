@@ -16,4 +16,6 @@ public interface UserService extends UserDetailsService {
     void deleteUser(String id);
 
     Page<UserDto> getUsers(PageRequest pageRequest);
+
+    boolean activateUser(String token);
 }

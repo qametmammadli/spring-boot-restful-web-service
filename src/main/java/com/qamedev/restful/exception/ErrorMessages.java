@@ -6,8 +6,9 @@ public enum ErrorMessages {
     COULD_NOT_DELETE_RECORD("Could not delete record"),
     COULD_NOT_UPDATE_RECORD("Could not update record"),
     EMAIL_NOT_VERIFIED("Email could not be verified"),
+    EMAIL_VERIFY_TOKEN_EXPIRED("Token for email verification has been expired"),
     INTERNAL_SERVER_ERROR("Internal server error"),
-    NO_RECORD_FOUND("Record with provided id is not found"),
+    NO_RECORD_FOUND("Record with provided data is not found"),
     REGISTERED_EMAIL("This Email already exists"),
     REQUIRED_FIELD("Required field. Field should not be empty");
 

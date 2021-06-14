@@ -6,6 +6,7 @@ import com.qamedev.restful.service.AddressService;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.ui.request.UserDetailsRequest;
 import com.qamedev.restful.ui.response.AddressResponse;
+import com.qamedev.restful.ui.response.StatusResponse;
 import com.qamedev.restful.ui.response.UserResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -66,6 +67,15 @@ public class UserController {
         UserDto userDto = userService.getUserByUserId(id);
 //        return UserMapper.INSTANCE.mapUserDtoToUserResponse(userDto);
         return mapper.map(userDto, UserResponse.class);
+    }
+
+    @GetMapping(path = "/activate")
+    public StatusResponse activateUser(@RequestParam(name = "token") String token){
+        boolean isActivated = userService.activateUser(token);
+        if(!isActivated){
+            return StatusResponse.ERROR;
+        }
+        return StatusResponse.SUCCESS;
     }
 
     @GetMapping("/{userId}/addresses")
