@@ -48,7 +48,7 @@ public class AddressServiceImpl implements AddressService {
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(userId);
         if (optionalUserEntity.isEmpty())
             throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
-//        optionalUserEntity.ifPresent();
+
         Optional<AddressEntity> optionalAddressEntity = addressRepository.findByUserIdAndAddressId(optionalUserEntity.get().getId(), addressId);
         if (optionalAddressEntity.isEmpty())
             throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
