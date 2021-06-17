@@ -42,4 +42,13 @@ public class JwtUtil {
                 .signWith(SignatureAlgorithm.HS512, Constants.TOKEN_SECRET)
                 .compact();
     }
+
+
+    public static String generatePasswordResetToken(String userId) {
+        return Jwts.builder()
+                .setSubject(userId)
+                .setExpiration(new Date(System.currentTimeMillis() + Constants.PASSWORD_RESET_EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS512, Constants.TOKEN_SECRET)
+                .compact();
+    }
 }

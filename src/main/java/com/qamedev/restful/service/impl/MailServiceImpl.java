@@ -44,4 +44,20 @@ public class MailServiceImpl implements MailService {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void sendPasswordResetEmail(TokenEntity tokenEntity) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper mail = new MimeMessageHelper(mimeMessage, "utf-8");
+            UserEntity user = tokenEntity.getUser();
+            mail.setFrom("rest-api@gmail.com"); // todo get from config
+            mail.setTo(user.getEmail());
+            mail.setSubject(MailUtil.PASSWORD_RESET_SUBJECT);
+            mail.setText(MailUtil.getPasswordResetBody(user.getFirstName(), user.getSurName(), tokenEntity.getToken()), true);
+            executorService.submit(() -> mailSender.send(mimeMessage));
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
 }

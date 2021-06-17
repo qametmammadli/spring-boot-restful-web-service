@@ -55,7 +55,10 @@ public class UserServiceImpl implements UserService {
             addressDto.setUser(userDto);
         }
 
-        UserEntity userEntity = mapToEntityAndSetCredentials(userDto);
+        UserEntity userEntity = mapper.map(userDto, UserEntity.class);
+        userEntity.setUserId(CommonUtil.generateUserId());
+        userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
+        userEntity.setStatus(UserStatus.PENDING.getStatusId());
         userEntity = userRepository.save(userEntity);
 
         TokenEntity tokenEntity = tokenService.createActivationToken(userEntity);
@@ -125,7 +128,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public boolean activateUser(String token) {
+        TokenEntity tokenEntity = checkToken(token);
+
+        UserEntity userEntity = tokenEntity.getUser();
+        userEntity.setStatus(UserStatus.ACTIVE.getStatusId());
+        userRepository.save(userEntity);
+        tokenService.deleteToken(tokenEntity);
+        return true;
+    }
+
+    @Override
+    public boolean passwordReset(String email) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findByEmail(email);
+        if(optionalUserEntity.isEmpty()){
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+        }
+
+        TokenEntity tokenEntity = tokenService.createPasswordResetToken(optionalUserEntity.get());
+        mailService.sendPasswordResetEmail(tokenEntity);
+        return true;
+    }
+
+
+    @Override
+    @Transactional
+    public boolean savePassword(String token, String password) {
+        TokenEntity tokenEntity = checkToken(token);
+
+        UserEntity userEntity = tokenEntity.getUser();
+
+        userEntity.setPassword(bCryptPasswordEncoder.encode(password));
+        userRepository.save(userEntity);
+        tokenService.deleteToken(tokenEntity);
+        return true;
+    }
+
+
+    private TokenEntity checkToken(String token) {
         Optional<TokenEntity> optionalTokenEntity = tokenService.getToken(token);
         if(optionalTokenEntity.isEmpty()){
             throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
@@ -137,22 +178,8 @@ public class UserServiceImpl implements UserService {
 
         if(isTokenExpired){
             tokenService.deleteToken(tokenEntity);
-            throw new UserServiceException(ErrorMessages.EMAIL_VERIFY_TOKEN_EXPIRED.getErrorMessage());
+            throw new UserServiceException(ErrorMessages.TOKEN_EXPIRED.getErrorMessage());
         }
-
-        UserEntity userEntity = tokenEntity.getUser();
-        userEntity.setStatus(UserStatus.ACTIVE.getStatusId());
-        userRepository.save(userEntity);
-        tokenService.deleteToken(tokenEntity);
-        return true;
-    }
-
-
-    private UserEntity mapToEntityAndSetCredentials(UserDto userDto) {
-        UserEntity userEntity = mapper.map(userDto, UserEntity.class);
-        userEntity.setUserId(CommonUtil.generateUserId());
-        userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
-        userEntity.setStatus(UserStatus.PENDING.getStatusId());
-        return userEntity;
+        return tokenEntity;
     }
 }

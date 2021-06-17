@@ -18,4 +18,8 @@ public interface UserService extends UserDetailsService {
     Page<UserDto> getUsers(PageRequest pageRequest);
 
     boolean activateUser(String token);
+
+    boolean passwordReset(String email);
+
+    boolean savePassword(String token, String password);
 }

@@ -1,12 +1,10 @@
 package com.qamedev.restful.ui.request;
 
 import lombok.Data;
-import lombok.Getter;
 
 import java.util.List;
 
 @Data
-@Getter
 public class UserDetailsRequest {
     private String firstName;
     private String surName;

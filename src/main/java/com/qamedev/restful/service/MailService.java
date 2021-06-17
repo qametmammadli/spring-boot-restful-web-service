@@ -4,4 +4,6 @@ import com.qamedev.restful.entity.TokenEntity;
 
 public interface MailService {
     void sendConfirmationEmail(TokenEntity tokenEntity);
+
+    void sendPasswordResetEmail(TokenEntity tokenEntity);
 }

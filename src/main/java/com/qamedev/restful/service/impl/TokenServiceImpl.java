@@ -40,4 +40,13 @@ public class TokenServiceImpl implements TokenService {
     public void deleteToken(TokenEntity token) {
         tokenRepository.delete(token);
     }
+
+    @Override
+    public TokenEntity createPasswordResetToken(UserEntity user) {
+        TokenEntity tokenEntity = new TokenEntity();
+        tokenEntity.setName(TokenType.PASSWORD_RESET);
+        tokenEntity.setToken(JwtUtil.generatePasswordResetToken(user.getUserId()));
+        tokenEntity.setUser(user);
+        return tokenRepository.save(tokenEntity);
+    }
 }

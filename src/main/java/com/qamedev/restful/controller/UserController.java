@@ -4,6 +4,7 @@ import com.qamedev.restful.dto.AddressDto;
 import com.qamedev.restful.dto.UserDto;
 import com.qamedev.restful.service.AddressService;
 import com.qamedev.restful.service.UserService;
+import com.qamedev.restful.ui.request.PasswordResetRequest;
 import com.qamedev.restful.ui.request.UserDetailsRequest;
 import com.qamedev.restful.ui.response.AddressResponse;
 import com.qamedev.restful.ui.response.StatusResponse;
@@ -113,6 +114,17 @@ public class UserController {
 
         AddressResponse addressResponse = mapper.map(addressDto, AddressResponse.class);
         return EntityModel.of(addressResponse, userLink, allUserAddressesLink);
+    }
+
+    @PostMapping(path = "/password-reset")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public StatusResponse passwordReset(@RequestBody PasswordResetRequest passwordReset){
+        return userService.passwordReset(passwordReset.getEmail()) ? StatusResponse.SUCCESS : StatusResponse.ERROR;
+    }
+
+    @PutMapping(path = "/save-password")
+    public StatusResponse savePassword(@RequestBody PasswordResetRequest passwordReset){
+        return userService.savePassword(passwordReset.getToken(), passwordReset.getPassword()) ? StatusResponse.SUCCESS : StatusResponse.ERROR;
     }
 
     @PutMapping("/{id}")
