@@ -83,6 +83,7 @@ public class UserServiceImpl implements UserService {
         Optional<UserEntity> optionalUserEntity = userRepository.findByEmail(email);
         if (optionalUserEntity.isEmpty())
             throw new UsernameNotFoundException("User with email " + email + " not found");
+
         return mapper.map(optionalUserEntity.get(), UserDto.class);
     }
 
@@ -90,8 +91,8 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByUserId(String id) {
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserId(id);
         if (optionalUserEntity.isEmpty())
-
             throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+
         return mapper.map(optionalUserEntity.get(), UserDto.class);
     }
 
