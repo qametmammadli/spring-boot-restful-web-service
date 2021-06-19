@@ -3,6 +3,8 @@ package com.qamedev.restful.service.impl;
 import com.qamedev.restful.dto.TokenType;
 import com.qamedev.restful.entity.TokenEntity;
 import com.qamedev.restful.entity.UserEntity;
+import com.qamedev.restful.exception.ErrorMessages;
+import com.qamedev.restful.exception.UserServiceException;
 import com.qamedev.restful.repository.TokenRepository;
 import com.qamedev.restful.service.TokenService;
 import com.qamedev.restful.util.JwtUtil;
@@ -48,5 +50,24 @@ public class TokenServiceImpl implements TokenService {
         tokenEntity.setToken(JwtUtil.generatePasswordResetToken(user.getUserId()));
         tokenEntity.setUser(user);
         return tokenRepository.save(tokenEntity);
+    }
+
+    @Override
+    @Transactional
+    public TokenEntity checkToken(String token) {
+        Optional<TokenEntity> optionalTokenEntity = tokenRepository.findByToken(token);
+        if(optionalTokenEntity.isEmpty()){
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+        }
+
+        TokenEntity tokenEntity = optionalTokenEntity.get();
+
+        boolean isTokenExpired = JwtUtil.isTokenExpired(token);
+
+        if(isTokenExpired){
+            tokenRepository.delete(tokenEntity);
+            throw new UserServiceException(ErrorMessages.TOKEN_EXPIRED.getErrorMessage());
+        }
+        return tokenEntity;
     }
 }

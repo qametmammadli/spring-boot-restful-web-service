@@ -13,7 +13,6 @@ import com.qamedev.restful.service.MailService;
 import com.qamedev.restful.service.TokenService;
 import com.qamedev.restful.service.UserService;
 import com.qamedev.restful.util.CommonUtil;
-import com.qamedev.restful.util.JwtUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -131,7 +130,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public boolean activateUser(String token) {
-        TokenEntity tokenEntity = checkToken(token);
+        TokenEntity tokenEntity = tokenService.checkToken(token);
 
         UserEntity userEntity = tokenEntity.getUser();
         userEntity.setStatus(UserStatus.ACTIVE.getStatusId());
@@ -156,7 +155,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public boolean savePassword(String token, String password) {
-        TokenEntity tokenEntity = checkToken(token);
+        TokenEntity tokenEntity = tokenService.checkToken(token);
 
         UserEntity userEntity = tokenEntity.getUser();
 
@@ -164,23 +163,5 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userEntity);
         tokenService.deleteToken(tokenEntity);
         return true;
-    }
-
-
-    private TokenEntity checkToken(String token) {
-        Optional<TokenEntity> optionalTokenEntity = tokenService.getToken(token);
-        if(optionalTokenEntity.isEmpty()){
-            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
-        }
-
-        TokenEntity tokenEntity = optionalTokenEntity.get();
-
-        boolean isTokenExpired = JwtUtil.isTokenExpired(token);
-
-        if(isTokenExpired){
-            tokenService.deleteToken(tokenEntity);
-            throw new UserServiceException(ErrorMessages.TOKEN_EXPIRED.getErrorMessage());
-        }
-        return tokenEntity;
     }
 }

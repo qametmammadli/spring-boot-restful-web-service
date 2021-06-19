@@ -14,4 +14,6 @@ public interface TokenService {
     TokenEntity createPasswordResetToken(UserEntity user);
 
     void deleteToken(TokenEntity token);
+
+    TokenEntity checkToken(String token);
 }
