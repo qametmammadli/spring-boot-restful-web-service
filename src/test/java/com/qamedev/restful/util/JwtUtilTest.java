@@ -1,6 +1,5 @@
 package com.qamedev.restful.util;
 
-import com.qamedev.restful.exception.UserServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +44,8 @@ class JwtUtilTest {
     @Test
     void testTokenExpired(){
         String expiredToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxQGdtYWlsLmNvbSIsImV4cCI6MTYyNDEyMzgwNX0.l1QWDAjHgmi0u-eaVNXVf2h-VWX8_vYOyZTuroRJqHyZfnQDATZXH3DLF36qTCQWPUnKMF1XRLNKwghiXhseog";
+        boolean isTokenExpired = JwtUtil.isTokenExpired(expiredToken);
 
-        assertThrows(UserServiceException.class, () -> JwtUtil.isTokenExpired(expiredToken));
+        assertTrue(isTokenExpired);
     }
 }
