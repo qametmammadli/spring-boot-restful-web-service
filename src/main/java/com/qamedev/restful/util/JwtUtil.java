@@ -1,7 +1,10 @@
 package com.qamedev.restful.util;
 
+import com.qamedev.restful.exception.ErrorMessages;
+import com.qamedev.restful.exception.UserServiceException;
 import com.qamedev.restful.security.Constants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -26,13 +29,17 @@ public class JwtUtil {
     }
 
     public static boolean isTokenExpired(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(Constants.TOKEN_SECRET)
-                .parseClaimsJws(token)
-                .getBody();
+        try{
+            Claims claims = Jwts.parser()
+                    .setSigningKey(Constants.TOKEN_SECRET)
+                    .parseClaimsJws(token)
+                    .getBody();
 
-        Date tokenExpirationDate = claims.getExpiration();
-        return tokenExpirationDate.before(new Date());
+            Date tokenExpirationDate = claims.getExpiration();
+            return tokenExpirationDate.before(new Date());
+        } catch(ExpiredJwtException e){
+            throw new UserServiceException(ErrorMessages.TOKEN_EXPIRED.getErrorMessage());
+        }
     }
 
     public static String generateActivationToken(String userId) {
