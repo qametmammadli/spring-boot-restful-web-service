@@ -19,25 +19,25 @@ public class JwtUtil {
     }
 
     public static String getUsernameByToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(Constants.TOKEN_SECRET)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return getClaims(token).getSubject();
     }
 
     public static boolean isTokenExpired(String token) {
         try{
-            Claims claims = Jwts.parser()
-                    .setSigningKey(Constants.TOKEN_SECRET)
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = getClaims(token);
 
             Date tokenExpirationDate = claims.getExpiration();
             return tokenExpirationDate.before(new Date());
         } catch(ExpiredJwtException e){
             return true;
         }
+    }
+
+    private static Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(Constants.TOKEN_SECRET)
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public static String generateActivationToken(String userId) {
@@ -47,7 +47,6 @@ public class JwtUtil {
                 .signWith(SignatureAlgorithm.HS512, Constants.TOKEN_SECRET)
                 .compact();
     }
-
 
     public static String generatePasswordResetToken(String userId) {
         return Jwts.builder()
